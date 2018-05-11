@@ -193,6 +193,42 @@ server.get('/login', (request, response) => {
     });
 });
 
+server.get('/registrate', (request, response) => {
+    response.redirect('registrate');
+});
+
+server.post('/registrate', (request, response) => {
+    database.sync().then(() => {
+        const login = request.body['login'];
+        if (!login) {
+            request.session.errors.push('The login was not provided.')
+        }
+
+        const password = request.body['password'];
+        if (!password) {
+            request.session.errors.push('The password was not provided.')
+        }
+
+        const password_confirmation = request.body['password_confirmation'];
+        if (!password_confirmation) {
+            request.session.errors.push('The password confirmation was not provided.')
+        }
+
+        if(password != password_confirmation) {
+            request.session.errors.push('The passwords do not match')
+        }
+
+        const credentials =
+            bcrypt.hashSync(password, bcryptSaltLength);
+
+        return User.upsert({
+            'login': login,
+            'credentials': credentials,
+            'administrator': false
+        });
+    })
+});
+
 server.post('/login', (request, response) => {
     const destination = '/';
 
